@@ -53,7 +53,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- СОВРЕМЕННЫЙ CSS ДИЗАЙН ---
+# --- СОВРЕМЕННЫЙ CSS ДИЗАЙН (исправлена видимость текста)---
 st.markdown("""
     <style>
     /* Основной фон - темный градиент */
@@ -61,21 +61,25 @@ st.markdown("""
         background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     }
     
-    /* Карточки метрик - стеклянный эффект */
+    /* Карточки метрик - стеклянный эффект со светлым текстом */
     .metric-card {
-        background: rgba(255,255,255,0.08);
+        background: rgba(255,255,255,0.12);
         backdrop-filter: blur(10px);
         border-radius: 20px;
         padding: 25px;
-        border: 1px solid rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.25);
         box-shadow: 0 8px 32px 0 rgba(31,38,135,0.37);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     
     .metric-card:hover {
         transform: translateY(-5px);
-        background: rgba(255,255,255,0.12);
+        background: rgba(255,255,255,0.18);
         border-color: rgba(255,255,255,0.4);
+    }
+    
+    .metric-card div {
+        color: white !important;
     }
     
     /* Заголовок с неоновым эффектом */
@@ -94,7 +98,7 @@ st.markdown("""
     /* Кастомные стили для вкладок */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255,255,255,0.08);
         border-radius: 12px;
         padding: 8px;
     }
@@ -104,6 +108,7 @@ st.markdown("""
         padding: 8px 24px;
         font-weight: 600;
         transition: all 0.3s;
+        color: rgba(255,255,255,0.8);
     }
     
     .stTabs [aria-selected="true"] {
@@ -113,10 +118,14 @@ st.markdown("""
     
     /* Стили для селекторов */
     .stSelectbox > div > div {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.25);
         border-radius: 12px;
-        color: white;
+        color: white !important;
+    }
+    
+    .stSelectbox label {
+        color: white !important;
     }
     
     /* Стили для кнопок */
@@ -138,9 +147,13 @@ st.markdown("""
     
     /* Чекбокс */
     .stCheckbox > div {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.08);
         border-radius: 10px;
         padding: 8px;
+    }
+    
+    .stCheckbox label {
+        color: white !important;
     }
     
     /* Таблица */
@@ -152,20 +165,44 @@ st.markdown("""
     
     /* Сайдбар */
     .css-1d391kg {
-        background: rgba(0,0,0,0.6);
+        background: rgba(0,0,0,0.7);
         backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255,255,255,0.1);
+        border-right: 1px solid rgba(255,255,255,0.15);
     }
     
     /* Текст в сайдбаре */
-    .sidebar-content {
-        color: white;
+    .css-1d391kg, .css-1d391kg p, .css-1d391kg label {
+        color: white !important;
+    }
+    
+    /* Заголовки в сайдбаре */
+    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+        color: white !important;
     }
     
     /* Метрики */
     [data-testid="stMetricValue"] {
-        font-size: 2.5rem;
+        font-size: 2rem;
         font-weight: 800;
+        color: white !important;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Информационные сообщения */
+    .stAlert {
+        background: rgba(0,0,0,0.6);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.2);
+    }
+    
+    /* Текст в сайдбаре метрик */
+    .stSidebar .stMetric {
+        background: rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 10px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -200,30 +237,60 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # Статистика
-    st.markdown("### 📊 Статистика")
-    st.metric("📋 Записей в фильтре", f"{len(filtered_df):,}")
-    st.metric("🏢 Юр лиц в фильтре", filtered_df["Юр лицо"].nunique() if "Юр лицо" in filtered_df.columns else 0)
+    # Статистика выполнения поставок
+    st.markdown("### 📊 Статистика выполнения")
     
-    if date_columns:
-        st.markdown("---")
-        st.markdown("### 📅 Доступные даты")
-        for col in date_columns[:3]:
-            st.caption(f"✅ {col}")
+    if "Разница day" in filtered_df.columns:
+        total = len(filtered_df)
+        on_time = len(filtered_df[filtered_df["Разница day"] >= 0])
+        late = len(filtered_df[filtered_df["Разница day"] < 0])
+        on_time_percent = (on_time / total * 100) if total > 0 else 0
+        
+        # Цветные метрики
+        st.markdown(f"""
+            <div style="background: rgba(81,207,102,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #51cf66;">
+                <div style="font-size: 0.85em; opacity: 0.8;">✅ ПРИЕХАЛО ВОВРЕМЯ</div>
+                <div style="font-size: 1.8em; font-weight: bold; color: #51cf66;">{on_time}</div>
+                <div style="font-size: 0.9em; opacity: 0.8;">{on_time_percent:.1f}% от всех</div>
+            </div>
+            
+            <div style="background: rgba(255,107,107,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #ff6b6b;">
+                <div style="font-size: 0.85em; opacity: 0.8;">⚠️ ПРОСРОЧИЛОСЬ</div>
+                <div style="font-size: 1.8em; font-weight: bold; color: #ff6b6b;">{late}</div>
+                <div style="font-size: 0.9em; opacity: 0.8;">{(late/total*100) if total>0 else 0:.1f}% от всех</div>
+            </div>
+            
+            <div style="background: rgba(102,126,234,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #667eea;">
+                <div style="font-size: 0.85em; opacity: 0.8;">📦 ВСЕГО ПОСТАВОК</div>
+                <div style="font-size: 1.8em; font-weight: bold; color: #667eea;">{total}</div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        # Дополнительная статистика по просрочкам
+        if late > 0:
+            avg_late_days = filtered_df[filtered_df["Разница day"] < 0]["Разница day"].mean()
+            max_late_days = filtered_df[filtered_df["Разница day"] < 0]["Разница day"].min()
+            st.markdown(f"""
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-top: 12px;">
+                    <div style="font-size: 0.85em; margin-bottom: 8px;">📉 ДЕТАЛИ ПРОСРОЧЕК</div>
+                    <div style="font-size: 0.9em;">Средняя просрочка: <span style="color: #ff6b6b; font-weight: bold;">{abs(avg_late_days):.1f} дней</span></div>
+                    <div style="font-size: 0.9em;">Макс. просрочка: <span style="color: #ff6b6b; font-weight: bold;">{abs(max_late_days):.0f} дней</span></div>
+                </div>
+            """, unsafe_allow_html=True)
     
     st.markdown("---")
     st.markdown("🔄 **Последнее обновление**")
     st.caption(datetime.now().strftime("%d.%m.%Y %H:%M:%S"))
 
-# --- KPI в карточках (без Всего SKU)---
+# --- KPI в карточках (3 метрики)---
 col1, col2, col3 = st.columns(3)
 
 # Всего заказов
 with col1:
     st.markdown(f"""
         <div class="metric-card">
-            <div style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">📋 ВСЕГО ЗАКАЗОВ</div>
-            <div style="font-size: 2.5em; font-weight: bold; background: linear-gradient(135deg, #fff 0%, #a8c0ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{len(filtered_df):,}</div>
+            <div style="font-size: 0.9em; opacity: 0.85; margin-bottom: 10px;">📋 ВСЕГО ЗАКАЗОВ</div>
+            <div style="font-size: 2.8em; font-weight: bold; background: linear-gradient(135deg, #fff 0%, #a8c0ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">{len(filtered_df):,}</div>
         </div>
     """, unsafe_allow_html=True)
 
@@ -231,11 +298,10 @@ with col1:
 with col2:
     if "Разница day" in filtered_df.columns:
         late_count = len(filtered_df[filtered_df["Разница day"] < 0])
-        late_gradient = "#ff6b6b" if late_count > 0 else "#51cf66"
         st.markdown(f"""
             <div class="metric-card">
-                <div style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">⚠️ ПРОСРОЧКИ</div>
-                <div style="font-size: 2.5em; font-weight: bold; color: {late_gradient};">{late_count}</div>
+                <div style="font-size: 0.9em; opacity: 0.85; margin-bottom: 10px;">⚠️ ПРОСРОЧКИ</div>
+                <div style="font-size: 2.8em; font-weight: bold; color: #ff6b6b;">{late_count}</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -246,8 +312,8 @@ with col3:
         diff_color = "#ff6b6b" if avg_diff < 0 else "#51cf66"
         st.markdown(f"""
             <div class="metric-card">
-                <div style="font-size: 0.9em; opacity: 0.8; margin-bottom: 10px;">📈 СР. ОТКЛОНЕНИЕ</div>
-                <div style="font-size: 2.5em; font-weight: bold; color: {diff_color};">{avg_diff:.1f} дн</div>
+                <div style="font-size: 0.9em; opacity: 0.85; margin-bottom: 10px;">📈 СР. ОТКЛОНЕНИЕ</div>
+                <div style="font-size: 2.8em; font-weight: bold; color: {diff_color};">{avg_diff:.1f} дн</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -303,6 +369,7 @@ with tab3:
                         labels={"x": "Количество SKU", "y": ""},
                         template="plotly_dark")
             fig.update_layout(height=450, plot_bgcolor='rgba(0,0,0,0)')
+            fig.update_traces(marker_line_width=0)
             st.plotly_chart(fig, use_container_width=True)
     
     with col2:
@@ -320,7 +387,8 @@ with tab3:
                         color_discrete_sequence=["#51cf66", "#ff6b6b"],
                         hole=0.4,
                         template="plotly_dark")
-            fig.update_traces(textposition='inside', textinfo='percent+label')
+            fig.update_traces(textposition='inside', textinfo='percent+label', 
+                            textfont=dict(color='white', size=14))
             fig.update_layout(height=450)
             st.plotly_chart(fig, use_container_width=True)
     
@@ -364,7 +432,7 @@ with tab4:
                             trendline="ols",
                             color_discrete_sequence=["#667eea"],
                             template="plotly_dark")
-            fig.update_traces(marker=dict(size=10, opacity=0.7))
+            fig.update_traces(marker=dict(size=12, opacity=0.6, line=dict(width=1, color='white')))
             fig.update_layout(height=450, plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
         
@@ -374,6 +442,7 @@ with tab4:
                         title=f"Распределение {selected_col}",
                         color_discrete_sequence=["#764ba2"],
                         template="plotly_dark")
+            fig.update_traces(marker=dict(color='#667eea'))
             fig.update_layout(height=450, plot_bgcolor='rgba(0,0,0,0)')
             st.plotly_chart(fig, use_container_width=True)
     
@@ -389,12 +458,13 @@ with tab4:
                        title="Матрица корреляций",
                        template="plotly_dark")
         fig.update_layout(height=500, plot_bgcolor='rgba(0,0,0,0)')
+        fig.update_traces(textfont=dict(color='white', size=10))
         st.plotly_chart(fig, use_container_width=True)
 
 # --- Footer ---
 st.markdown("---")
 st.markdown("""
-    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.6);">
-        <p>✨ Дашборд создан с Streamlit | Автоматическое обновление данных | Design by NWL</p>
+    <div style="text-align: center; padding: 20px; color: rgba(255,255,255,0.7);">
+        <p>✨ Дашборд создан с Streamlit | Автоматическое обновление данных | NWL Logistics</p>
     </div>
 """, unsafe_allow_html=True)
