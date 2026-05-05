@@ -181,7 +181,7 @@ st.markdown("""
     
     /* Сайдбар - СВЕТЛЫЙ ФОН ДЛЯ ЧЕРНОГО ТЕКСТА */
     .css-1d391kg {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%) !important;
+        background: linear-gradient(135deg, #4b6980 0%, #e9ecef 100%) !important;
         backdrop-filter: blur(20px);
         border-right: 2px solid rgba(102,126,234,0.3);
     }
