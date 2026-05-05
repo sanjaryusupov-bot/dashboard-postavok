@@ -45,6 +45,12 @@ for col in df.columns:
         except:
             pass
 
+# --- Удаляем ненужные колонки если они есть ---
+cols_to_remove = ['дата приёма диспечерская', 'приёмка wms', 'Дата приёма диспечерская', 'Приёмка WMS']
+for col in cols_to_remove:
+    if col in df.columns:
+        df = df.drop(columns=[col])
+
 # --- UI ---
 st.set_page_config(
     page_title="Дашборд поставок", 
@@ -125,7 +131,7 @@ st.markdown("""
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.25);
         border-radius: 12px;
-        color: white !important;
+        color: black !important;
     }
     
     .stSelectbox label {
@@ -167,27 +173,74 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.1);
     }
     
-    /* Сайдбар - ТЕМНЫЙ ФОН */
+    /* Сайдбар - СВЕТЛЫЙ ФОН ДЛЯ ЧЕРНОГО ТЕКСТА */
     .css-1d391kg {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%) !important;
+        background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%) !important;
         backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(102,126,234,0.3);
+        border-right: 2px solid rgba(102,126,234,0.3);
     }
     
-    /* Текст в сайдбаре */
-    .css-1d391kg, .css-1d391kg p, .css-1d391kg label {
-        color: black !important;
+    /* Все тексты в сайдбаре - ЧЕРНЫЕ */
+    .css-1d391kg, 
+    .css-1d391kg p, 
+    .css-1d391kg label,
+    .css-1d391kg .stMarkdown,
+    .css-1d391kg .stMarkdown p,
+    .css-1d391kg .stSelectbox label,
+    .css-1d391kg .stCheckbox label {
+        color: #000000 !important;
     }
     
-    .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
+    /* Заголовки в сайдбаре - ЧЕРНЫЕ */
+    .css-1d391kg h1, 
+    .css-1d391kg h2, 
+    .css-1d391kg h3,
+    .css-1d391kg .stMarkdown h1,
+    .css-1d391kg .stMarkdown h2,
+    .css-1d391kg .stMarkdown h3 {
+        color: #000000 !important;
+    }
+    
+    /* Селекторы в сайдбаре - ЧЕРНЫЙ ТЕКСТ */
+    .css-1d391kg .stSelectbox > div > div {
+        background: white !important;
         color: black !important;
+        border: 1px solid #667eea;
+    }
+    
+    /* Чекбокс в сайдбаре */
+    .css-1d391kg .stCheckbox > div {
+        background: white !important;
+    }
+    
+    /* Метрики в сайдбаре */
+    .stSidebar .stMetric,
+    .stSidebar .stMetric label,
+    .stSidebar .stMetric .stMetricValue {
+        color: #000000 !important;
+    }
+    
+    /* Числа в статистике сайдбара */
+    .css-1d391kg div[style*="font-size: 1.8em"] {
+        color: #000000 !important;
+    }
+    
+    /* Текст в информационных блоках сайдбара */
+    .css-1d391kg .stAlert {
+        background: rgba(0,0,0,0.8) !important;
+        color: white !important;
+    }
+    
+    /* Кастомные блоки в сайдбаре */
+    .css-1d391kg div[style*="background: rgba"] {
+        color: #000000 !important;
     }
     
     /* Метрики */
     [data-testid="stMetricValue"] {
         font-size: 2rem;
         font-weight: 800;
-        color: black !important;
+        color: white !important;
     }
     
     [data-testid="stMetricLabel"] {
@@ -199,25 +252,7 @@ st.markdown("""
         background: rgba(0,0,0,0.6);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.2);
-        color: black !important;
-    }
-    
-    /* Стиль для кнопки деталей */
-    .details-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: black;
-        padding: 8px 16px;
-        border-radius: 10px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s;
-        font-size: 0.85em;
-        margin-top: 10px;
-    }
-    
-    .details-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+        color: white !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -273,27 +308,24 @@ with st.sidebar:
         
         if expected_count > 0:
             st.markdown(f"""
-                <div style="background: linear-gradient(135deg, rgba(102,126,234,0.25) 0%, rgba(118,75,162,0.25) 100%); 
+                <div style="background: linear-gradient(135deg, rgba(102,126,234,0.15) 0%, rgba(118,75,162,0.15) 100%); 
                             border-radius: 15px; padding: 15px; text-align: center; 
                             border: 1px solid rgba(102,126,234,0.5);
                             margin-bottom: 10px;">
                     <div style="font-size: 2.5em;">🚚</div>
                     <div style="font-size: 2em; font-weight: bold; color: #667eea;">{expected_count}</div>
-                    <div style="font-size: 0.9em; margin-top: 5px;">поставок ожидается</div>
-                    <div style="font-size: 0.8em; opacity: 0.8;">сегодня, {today.strftime('%d.%m.%Y')}</div>
+                    <div style="font-size: 0.9em; margin-top: 5px; color: #000000;">поставок ожидается</div>
+                    <div style="font-size: 0.8em; color: #000000;">сегодня, {today.strftime('%d.%m.%Y')}</div>
                 </div>
             """, unsafe_allow_html=True)
             
-            # Кнопка для показа деталей
             if st.button(f"📋 Показать детали ({expected_count} поставок)", key="show_details_btn"):
                 st.session_state.show_expected_details = not st.session_state.show_expected_details
             
-            # Детальная таблица ожидаемых поставок
             if st.session_state.show_expected_details:
                 st.markdown("---")
                 st.markdown("### 📋 Детали ожидаемых поставок")
                 
-                # Выбираем важные колонки для отображения
                 display_columns = []
                 important_cols = ['Юр лицо', 'Поставщик', '№ заказа', 'Кол-во sku', delivery_date_col, 'Разница day']
                 
@@ -301,16 +333,12 @@ with st.sidebar:
                     if col in expected_today.columns:
                         display_columns.append(col)
                 
-                # Добавляем другие колонки если нет важных
                 if len(display_columns) < 3:
                     display_columns = expected_today.columns.tolist()[:6]
                 
                 expected_display = expected_today[display_columns].copy()
+                st.dataframe(expected_display, use_container_width=True, height=250)
                 
-                # Показываем таблицу
-                st.dataframe(expected_display, use_container_width=True, height=300)
-                
-                # Дополнительная статистика
                 st.markdown("---")
                 col1, col2 = st.columns(2)
                 with col1:
@@ -340,20 +368,20 @@ with st.sidebar:
         on_time_percent = (on_time / total * 100) if total > 0 else 0
         
         st.markdown(f"""
-            <div style="background: rgba(81,207,102,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #51cf66;">
-                <div style="font-size: 0.85em; opacity: 0.8;">✅ ПРИЕХАЛО ВОВРЕМЯ</div>
+            <div style="background: rgba(81,207,102,0.1); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #51cf66;">
+                <div style="font-size: 0.85em;">✅ ПРИЕХАЛО ВОВРЕМЯ</div>
                 <div style="font-size: 1.8em; font-weight: bold; color: #51cf66;">{on_time}</div>
-                <div style="font-size: 0.9em; opacity: 0.8;">{on_time_percent:.1f}% от всех</div>
+                <div style="font-size: 0.9em;">{on_time_percent:.1f}% от всех</div>
             </div>
             
-            <div style="background: rgba(255,107,107,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #ff6b6b;">
-                <div style="font-size: 0.85em; opacity: 0.8;">⚠️ ПРОСРОЧИЛОСЬ</div>
+            <div style="background: rgba(255,107,107,0.1); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #ff6b6b;">
+                <div style="font-size: 0.85em;">⚠️ ПРОСРОЧИЛОСЬ</div>
                 <div style="font-size: 1.8em; font-weight: bold; color: #ff6b6b;">{late}</div>
-                <div style="font-size: 0.9em; opacity: 0.8;">{(late/total*100) if total>0 else 0:.1f}% от всех</div>
+                <div style="font-size: 0.9em;">{(late/total*100) if total>0 else 0:.1f}% от всех</div>
             </div>
             
-            <div style="background: rgba(102,126,234,0.15); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #667eea;">
-                <div style="font-size: 0.85em; opacity: 0.8;">📦 ВСЕГО ПОСТАВОК</div>
+            <div style="background: rgba(102,126,234,0.1); border-radius: 12px; padding: 12px; margin: 8px 0; border-left: 3px solid #667eea;">
+                <div style="font-size: 0.85em;">📦 ВСЕГО ПОСТАВОК</div>
                 <div style="font-size: 1.8em; font-weight: bold; color: #667eea;">{total}</div>
             </div>
         """, unsafe_allow_html=True)
@@ -362,7 +390,7 @@ with st.sidebar:
             avg_late_days = filtered_df[filtered_df["Разница day"] < 0]["Разница day"].mean()
             max_late_days = filtered_df[filtered_df["Разница day"] < 0]["Разница day"].min()
             st.markdown(f"""
-                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; margin-top: 12px;">
+                <div style="background: rgba(0,0,0,0.05); border-radius: 12px; padding: 12px; margin-top: 12px;">
                     <div style="font-size: 0.85em; margin-bottom: 8px;">📉 ДЕТАЛИ ПРОСРОЧЕК</div>
                     <div style="font-size: 0.9em;">Средняя просрочка: <span style="color: #ff6b6b; font-weight: bold;">{abs(avg_late_days):.1f} дней</span></div>
                     <div style="font-size: 0.9em;">Макс. просрочка: <span style="color: #ff6b6b; font-weight: bold;">{abs(max_late_days):.0f} дней</span></div>
@@ -407,7 +435,7 @@ with col3:
 
 st.markdown("---")
 
-# --- Вкладки с белыми заголовками ---
+# --- Вкладки ---
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Дашборд", "⚠️ Просрочки", "📈 Аналитика", "🎨 Визуализации"])
 
 with tab1:
@@ -440,12 +468,57 @@ with tab2:
 with tab3:
     st.markdown('<h3 style="color: white;">📊 Аналитика поставок</h3>', unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # Выбор даты для анализа
+    if date_columns:
+        st.markdown("---")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            date_col_analysis = st.selectbox("📅 Выберите дату для анализа", date_columns, key="analysis_date")
+        
+        with col2:
+            if delivery_date_col:
+                st.info(f"ℹ️ Анализ по дате: **{delivery_date_col}**")
+        
+        if date_col_analysis in filtered_df.columns:
+            temp_df = filtered_df.dropna(subset=[date_col_analysis])
+            if len(temp_df) > 0:
+                temp_df['Год'] = temp_df[date_col_analysis].dt.year
+                temp_df['Месяц'] = temp_df[date_col_analysis].dt.month
+                temp_df['День'] = temp_df[date_col_analysis].dt.day
+                
+                # Статистика по месяцам
+                monthly_stats = temp_df.groupby(['Год', 'Месяц']).size().reset_index(name='Количество')
+                monthly_stats['Период'] = monthly_stats['Год'].astype(str) + '-' + monthly_stats['Месяц'].astype(str).str.zfill(2)
+                
+                fig = px.line(monthly_stats, x='Период', y='Количество',
+                             title=f"Динамика поставок по {date_col_analysis}",
+                             markers=True,
+                             template="plotly_dark")
+                fig.update_traces(line_color="#667eea", marker_color="#764ba2", marker_size=10)
+                fig.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)')
+                st.plotly_chart(fig, use_container_width=True)
+                
+                # Детальная таблица по выбранной дате
+                st.markdown("---")
+                st.markdown(f"### 📋 Детальные данные по {date_col_analysis}")
+                
+                # Фильтр по конкретной дате
+                unique_dates = sorted(temp_df[date_col_analysis].dt.date.unique())
+                selected_date = st.selectbox("Выберите конкретную дату для просмотра", unique_dates)
+                
+                if selected_date:
+                    filtered_by_date = temp_df[temp_df[date_col_analysis].dt.date == selected_date]
+                    st.success(f"Найдено {len(filtered_by_date)} поставок на {selected_date}")
+                    st.dataframe(filtered_by_date, use_container_width=True, height=300)
     
-    with col1:
-        if "Юр лицо" in filtered_df.columns and "Кол-во sku" in filtered_df.columns:
+    # SKU по компаниям
+    if "Юр лицо" in filtered_df.columns and "Кол-во sku" in filtered_df.columns:
+        st.markdown("---")
+        col1, col2 = st.columns(2)
+        
+        with col1:
             sku_by_company = filtered_df.groupby("Юр лицо")["Кол-во sku"].sum().sort_values(ascending=True)
-            
             fig = px.bar(sku_by_company, 
                         x=sku_by_company.values, 
                         y=sku_by_company.index,
@@ -458,46 +531,25 @@ with tab3:
             fig.update_layout(height=450, plot_bgcolor='rgba(0,0,0,0)')
             fig.update_traces(marker_line_width=0)
             st.plotly_chart(fig, use_container_width=True)
-    
-    with col2:
-        if "Разница day" in filtered_df.columns:
-            status_df = pd.DataFrame({
-                "Статус": ["✅ В срок", "⚠️ Просрочено"],
-                "Количество": [
-                    len(filtered_df[filtered_df["Разница day"] >= 0]),
-                    len(filtered_df[filtered_df["Разница day"] < 0])
-                ]
-            })
-            
-            fig = px.pie(status_df, values="Количество", names="Статус",
-                        title="Статус выполнения поставок",
-                        color_discrete_sequence=["#51cf66", "#ff6b6b"],
-                        hole=0.4,
-                        template="plotly_dark")
-            fig.update_traces(textposition='inside', textinfo='percent+label', 
-                            textfont=dict(color='white', size=14))
-            fig.update_layout(height=450)
-            st.plotly_chart(fig, use_container_width=True)
-    
-    if date_columns:
-        st.markdown("---")
-        st.markdown('<h3 style="color: white;">📅 Динамика поставок</h3>', unsafe_allow_html=True)
-        date_col = st.selectbox("Выберите дату для анализа", date_columns)
         
-        if date_col in filtered_df.columns:
-            temp_df = filtered_df.dropna(subset=[date_col])
-            if len(temp_df) > 0:
-                temp_df['Год'] = temp_df[date_col].dt.year
-                temp_df['Месяц'] = temp_df[date_col].dt.month
-                monthly_stats = temp_df.groupby(['Год', 'Месяц']).size().reset_index(name='Количество')
-                monthly_stats['Период'] = monthly_stats['Год'].astype(str) + '-' + monthly_stats['Месяц'].astype(str).str.zfill(2)
+        with col2:
+            if "Разница day" in filtered_df.columns:
+                status_df = pd.DataFrame({
+                    "Статус": ["✅ В срок", "⚠️ Просрочено"],
+                    "Количество": [
+                        len(filtered_df[filtered_df["Разница day"] >= 0]),
+                        len(filtered_df[filtered_df["Разница day"] < 0])
+                    ]
+                })
                 
-                fig = px.line(monthly_stats, x='Период', y='Количество',
-                             title=f"Динамика поставок по {date_col}",
-                             markers=True,
-                             template="plotly_dark")
-                fig.update_traces(line_color="#667eea", marker_color="#764ba2", marker_size=10)
-                fig.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)')
+                fig = px.pie(status_df, values="Количество", names="Статус",
+                            title="Статус выполнения поставок",
+                            color_discrete_sequence=["#51cf66", "#ff6b6b"],
+                            hole=0.4,
+                            template="plotly_dark")
+                fig.update_traces(textposition='inside', textinfo='percent+label', 
+                                textfont=dict(color='white', size=14))
+                fig.update_layout(height=450)
                 st.plotly_chart(fig, use_container_width=True)
 
 with tab4:
