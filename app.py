@@ -50,6 +50,12 @@ cols_to_remove = ['дата приёма диспечерская', 'приём�
 for col in cols_to_remove:
     if col in df.columns:
         df = df.drop(columns=[col])
+        if col in date_columns:
+            date_columns.remove(col)
+
+# --- Фильтруем date_columns, убираем нежелательные ---
+exclude_date_cols = ['дата приёма диспечерская', 'Дата приёма диспечерская', 'приёмка wms', 'Приёмка WMS']
+date_columns = [col for col in date_columns if col not in exclude_date_cols]
 
 # --- UI ---
 st.set_page_config(
@@ -236,6 +242,11 @@ st.markdown("""
         color: #000000 !important;
     }
     
+    /* Заголовки в кастомных блоках */
+    .css-1d391kg div[style*="background: rgba"] div {
+        color: #000000 !important;
+    }
+    
     /* Метрики */
     [data-testid="stMetricValue"] {
         font-size: 2rem;
@@ -264,8 +275,9 @@ st.markdown('<p class="main-title">📦 Magnit Cosmetik: NWL</p>', unsafe_allow_
 delivery_date_col = None
 for col in df.columns:
     if 'прибытие' in col.lower() or 'план' in col.lower():
-        delivery_date_col = col
-        break
+        if col not in exclude_date_cols:
+            delivery_date_col = col
+            break
 
 # --- Боковая панель с фильтрами ---
 with st.sidebar:
@@ -319,13 +331,16 @@ with st.sidebar:
                 </div>
             """, unsafe_allow_html=True)
             
+            # Кнопка для показа деталей
             if st.button(f"📋 Показать детали ({expected_count} поставок)", key="show_details_btn"):
                 st.session_state.show_expected_details = not st.session_state.show_expected_details
             
+            # Детальная таблица ожидаемых поставок
             if st.session_state.show_expected_details:
                 st.markdown("---")
                 st.markdown("### 📋 Детали ожидаемых поставок")
                 
+                # Выбираем важные колонки для отображения
                 display_columns = []
                 important_cols = ['Юр лицо', 'Поставщик', '№ заказа', 'Кол-во sku', delivery_date_col, 'Разница day']
                 
@@ -333,12 +348,14 @@ with st.sidebar:
                     if col in expected_today.columns:
                         display_columns.append(col)
                 
+                # Добавляем другие колонки если нет важных
                 if len(display_columns) < 3:
                     display_columns = expected_today.columns.tolist()[:6]
                 
                 expected_display = expected_today[display_columns].copy()
-                st.dataframe(expected_display, use_container_width=True, height=250)
+                st.dataframe(expected_display, use_container_width=True, height=300)
                 
+                # Дополнительная статистика
                 st.markdown("---")
                 col1, col2 = st.columns(2)
                 with col1:
@@ -468,49 +485,57 @@ with tab2:
 with tab3:
     st.markdown('<h3 style="color: white;">📊 Аналитика поставок</h3>', unsafe_allow_html=True)
     
-    # Выбор даты для анализа
+    # Выбор даты для анализа (только нужные даты)
     if date_columns:
         st.markdown("---")
-        col1, col2 = st.columns(2)
         
-        with col1:
-            date_col_analysis = st.selectbox("📅 Выберите дату для анализа", date_columns, key="analysis_date")
+        # Фильтруем date_columns, исключая ненужные
+        available_date_cols = [col for col in date_columns if 'диспечерская' not in col.lower() and 'приёмка' not in col.lower()]
         
-        with col2:
-            if delivery_date_col:
-                st.info(f"ℹ️ Анализ по дате: **{delivery_date_col}**")
-        
-        if date_col_analysis in filtered_df.columns:
-            temp_df = filtered_df.dropna(subset=[date_col_analysis])
-            if len(temp_df) > 0:
-                temp_df['Год'] = temp_df[date_col_analysis].dt.year
-                temp_df['Месяц'] = temp_df[date_col_analysis].dt.month
-                temp_df['День'] = temp_df[date_col_analysis].dt.day
-                
-                # Статистика по месяцам
-                monthly_stats = temp_df.groupby(['Год', 'Месяц']).size().reset_index(name='Количество')
-                monthly_stats['Период'] = monthly_stats['Год'].astype(str) + '-' + monthly_stats['Месяц'].astype(str).str.zfill(2)
-                
-                fig = px.line(monthly_stats, x='Период', y='Количество',
-                             title=f"Динамика поставок по {date_col_analysis}",
-                             markers=True,
-                             template="plotly_dark")
-                fig.update_traces(line_color="#667eea", marker_color="#764ba2", marker_size=10)
-                fig.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)')
-                st.plotly_chart(fig, use_container_width=True)
-                
-                # Детальная таблица по выбранной дате
-                st.markdown("---")
-                st.markdown(f"### 📋 Детальные данные по {date_col_analysis}")
-                
-                # Фильтр по конкретной дате
-                unique_dates = sorted(temp_df[date_col_analysis].dt.date.unique())
-                selected_date = st.selectbox("Выберите конкретную дату для просмотра", unique_dates)
-                
-                if selected_date:
-                    filtered_by_date = temp_df[temp_df[date_col_analysis].dt.date == selected_date]
-                    st.success(f"Найдено {len(filtered_by_date)} поставок на {selected_date}")
-                    st.dataframe(filtered_by_date, use_container_width=True, height=300)
+        if available_date_cols:
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                date_col_analysis = st.selectbox("📅 Выберите дату для анализа", available_date_cols, key="analysis_date")
+            
+            with col2:
+                if delivery_date_col:
+                    st.info(f"ℹ️ Анализ по дате: **{delivery_date_col}**")
+            
+            if date_col_analysis in filtered_df.columns:
+                temp_df = filtered_df.dropna(subset=[date_col_analysis])
+                if len(temp_df) > 0:
+                    temp_df['Год'] = temp_df[date_col_analysis].dt.year
+                    temp_df['Месяц'] = temp_df[date_col_analysis].dt.month
+                    temp_df['День'] = temp_df[date_col_analysis].dt.day
+                    
+                    # Статистика по месяцам
+                    monthly_stats = temp_df.groupby(['Год', 'Месяц']).size().reset_index(name='Количество')
+                    monthly_stats['Период'] = monthly_stats['Год'].astype(str) + '-' + monthly_stats['Месяц'].astype(str).str.zfill(2)
+                    
+                    fig = px.line(monthly_stats, x='Период', y='Количество',
+                                 title=f"Динамика поставок по {date_col_analysis}",
+                                 markers=True,
+                                 template="plotly_dark")
+                    fig.update_traces(line_color="#667eea", marker_color="#764ba2", marker_size=10)
+                    fig.update_layout(height=400, plot_bgcolor='rgba(0,0,0,0)')
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Детальная таблица по выбранной дате
+                    st.markdown("---")
+                    st.markdown(f"### 📋 Детальные данные по {date_col_analysis}")
+                    
+                    # Фильтр по конкретной дате
+                    unique_dates = sorted(temp_df[date_col_analysis].dt.date.unique())
+                    if unique_dates:
+                        selected_date = st.selectbox("Выберите конкретную дату для просмотра", unique_dates)
+                        
+                        if selected_date:
+                            filtered_by_date = temp_df[temp_df[date_col_analysis].dt.date == selected_date]
+                            st.success(f"Найдено {len(filtered_by_date)} поставок на {selected_date}")
+                            st.dataframe(filtered_by_date, use_container_width=True, height=300)
+        else:
+            st.info("ℹ️ Нет доступных дат для анализа")
     
     # SKU по компаниям
     if "Юр лицо" in filtered_df.columns and "Кол-во sku" in filtered_df.columns:
