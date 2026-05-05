@@ -177,7 +177,7 @@ st.markdown("""
     
     /* Заголовки в сайдбаре */
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: white !important;
+        color: black !important;
     }
     
     /* Метрики */
