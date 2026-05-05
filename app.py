@@ -167,13 +167,14 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.1);
     }
     
-    /* Сайдбар */
+    /* Сайдбар - ТЕМНЫЙ ФОН */
     .css-1d391kg {
-        background: rgba(0,0,0,0.7);
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%) !important;
         backdrop-filter: blur(20px);
-        border-right: 1px solid rgba(255,255,255,0.15);
+        border-right: 1px solid rgba(102,126,234,0.3);
     }
     
+    /* Текст в сайдбаре */
     .css-1d391kg, .css-1d391kg p, .css-1d391kg label {
         color: white !important;
     }
@@ -200,11 +201,36 @@ st.markdown("""
         border: 1px solid rgba(255,255,255,0.2);
         color: white !important;
     }
+    
+    /* Стиль для кнопки деталей */
+    .details-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 10px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 0.85em;
+        margin-top: 10px;
+    }
+    
+    .details-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102,126,234,0.4);
+    }
     </style>
 """, unsafe_allow_html=True)
 
 # Заголовок
 st.markdown('<p class="main-title">📦 Magnit Cosmetik: NWL</p>', unsafe_allow_html=True)
+
+# --- Поиск колонки с датой прибытия ---
+delivery_date_col = None
+for col in df.columns:
+    if 'прибытие' in col.lower() or 'план' in col.lower():
+        delivery_date_col = col
+        break
 
 # --- Боковая панель с фильтрами ---
 with st.sidebar:
@@ -236,33 +262,71 @@ with st.sidebar:
     # Ожидается сегодня поставок
     st.markdown("### 📅 Ожидается сегодня")
     
-    # Поиск колонки с датой прибытия
-    delivery_date_col = None
-    for col in df.columns:
-        if 'прибытие' in col.lower() or 'план' in col.lower():
-            delivery_date_col = col
-            break
+    # Состояние для отображения деталей
+    if 'show_expected_details' not in st.session_state:
+        st.session_state.show_expected_details = False
     
-    if delivery_date_col and delivery_date_col in filtered_df.columns:
+    if delivery_date_col and delivery_date_col in df.columns:
         today = datetime.now().date()
-        expected_today = filtered_df[pd.to_datetime(filtered_df[delivery_date_col], errors='coerce').dt.date == today]
+        expected_today = df[pd.to_datetime(df[delivery_date_col], errors='coerce').dt.date == today]
         expected_count = len(expected_today)
         
         if expected_count > 0:
             st.markdown(f"""
-                <div style="background: linear-gradient(135deg, rgba(102,126,234,0.2) 0%, rgba(118,75,162,0.2) 100%); 
+                <div style="background: linear-gradient(135deg, rgba(102,126,234,0.25) 0%, rgba(118,75,162,0.25) 100%); 
                             border-radius: 15px; padding: 15px; text-align: center; 
-                            border: 1px solid rgba(102,126,234,0.5);">
-                    <div style="font-size: 2em;">🚚</div>
-                    <div style="font-size: 1.8em; font-weight: bold; color: #667eea;">{expected_count}</div>
+                            border: 1px solid rgba(102,126,234,0.5);
+                            margin-bottom: 10px;">
+                    <div style="font-size: 2.5em;">🚚</div>
+                    <div style="font-size: 2em; font-weight: bold; color: #667eea;">{expected_count}</div>
                     <div style="font-size: 0.9em; margin-top: 5px;">поставок ожидается</div>
                     <div style="font-size: 0.8em; opacity: 0.8;">сегодня, {today.strftime('%d.%m.%Y')}</div>
                 </div>
             """, unsafe_allow_html=True)
+            
+            # Кнопка для показа деталей
+            if st.button(f"📋 Показать детали ({expected_count} поставок)", key="show_details_btn"):
+                st.session_state.show_expected_details = not st.session_state.show_expected_details
+            
+            # Детальная таблица ожидаемых поставок
+            if st.session_state.show_expected_details:
+                st.markdown("---")
+                st.markdown("### 📋 Детали ожидаемых поставок")
+                
+                # Выбираем важные колонки для отображения
+                display_columns = []
+                important_cols = ['Юр лицо', 'Поставщик', '№ заказа', 'Кол-во sku', delivery_date_col, 'Разница day']
+                
+                for col in important_cols:
+                    if col in expected_today.columns:
+                        display_columns.append(col)
+                
+                # Добавляем другие колонки если нет важных
+                if len(display_columns) < 3:
+                    display_columns = expected_today.columns.tolist()[:6]
+                
+                expected_display = expected_today[display_columns].copy()
+                
+                # Показываем таблицу
+                st.dataframe(expected_display, use_container_width=True, height=300)
+                
+                # Дополнительная статистика
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                with col1:
+                    if "Кол-во sku" in expected_today.columns:
+                        total_sku = expected_today["Кол-во sku"].sum() if expected_today["Кол-во sku"].dtype in ['int64', 'float64'] else 0
+                        st.metric("📦 Всего SKU", f"{int(total_sku):,}")
+                with col2:
+                    if "Юр лицо" in expected_today.columns:
+                        unique_companies = expected_today["Юр лицо"].nunique()
+                        st.metric("🏢 Компаний", unique_companies)
         else:
             st.info("✅ На сегодня поставок не запланировано")
+            st.session_state.show_expected_details = False
     else:
         st.info("ℹ️ Колонка с датой прибытия не найдена")
+        st.session_state.show_expected_details = False
     
     st.markdown("---")
     
