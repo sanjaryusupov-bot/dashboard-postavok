@@ -176,7 +176,7 @@ st.markdown("""
     
     /* Текст в сайдбаре */
     .css-1d391kg, .css-1d391kg p, .css-1d391kg label {
-        color: white !important;
+        color: black !important;
     }
     
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
