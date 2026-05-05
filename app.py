@@ -323,7 +323,7 @@ st.markdown("---")
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Дашборд", "⚠️ Просрочки", "📈 Аналитика", "🎨 Визуализации"])
 
 with tab1:
-    st.subheader("📋")
+    st.subheader("📋Данные поставшика")
     st.dataframe(filtered_df, use_container_width=True, height=450, 
                  column_config={
                      "Разница day": st.column_config.NumberColumn("Отклонение", format="%.0f дн")
@@ -343,7 +343,7 @@ with tab2:
                               title="Распределение просрочек по дням",
                               color_discrete_sequence=["#ff6b6b"],
                               labels={"Разница day": "Отклонение (дни)", "count": "Кол-во поставок"},
-                              template="plotly_dark")
+                              template="simple_white")
             fig.update_layout(showlegend=False, height=450, plot_bgcolor='rgba(0,0,0,0)')
             fig.update_traces(marker_line_width=0)
             st.plotly_chart(fig, use_container_width=True)
