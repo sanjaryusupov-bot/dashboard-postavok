@@ -121,7 +121,7 @@ st.markdown("""
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.25);
         border-radius: 12px;
-        color: white !important;
+        color: black !important;
     }
     
     .stSelectbox label {
@@ -208,7 +208,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Заголовок
-st.markdown('<p class="main-title">📦 NWL Logistics Dashboard</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">📦 Magnit Cosmetik: NWL</p>', unsafe_allow_html=True)
 
 # --- Боковая панель с фильтрами ---
 with st.sidebar:
@@ -323,7 +323,7 @@ st.markdown("---")
 tab1, tab2, tab3, tab4 = st.tabs(["📊 Дашборд", "⚠️ Просрочки", "📈 Аналитика", "🎨 Визуализации"])
 
 with tab1:
-    st.subheader("📋 Детальная таблица поставок")
+    st.subheader("📋")
     st.dataframe(filtered_df, use_container_width=True, height=450, 
                  column_config={
                      "Разница day": st.column_config.NumberColumn("Отклонение", format="%.0f дн")
