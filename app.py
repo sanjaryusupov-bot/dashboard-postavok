@@ -180,14 +180,14 @@ st.markdown("""
     }
     
     .css-1d391kg h1, .css-1d391kg h2, .css-1d391kg h3 {
-        color: white !important;
+        color: black !important;
     }
     
     /* Метрики */
     [data-testid="stMetricValue"] {
         font-size: 2rem;
         font-weight: 800;
-        color: white !important;
+        color: black !important;
     }
     
     [data-testid="stMetricLabel"] {
@@ -199,13 +199,13 @@ st.markdown("""
         background: rgba(0,0,0,0.6);
         backdrop-filter: blur(10px);
         border: 1px solid rgba(255,255,255,0.2);
-        color: white !important;
+        color: black !important;
     }
     
     /* Стиль для кнопки деталей */
     .details-btn {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
+        color: black;
         padding: 8px 16px;
         border-radius: 10px;
         text-align: center;
